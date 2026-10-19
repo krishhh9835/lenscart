@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify, request, session
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
+import re
 
 load_dotenv()
 
@@ -22,15 +23,18 @@ if is_prod:
     app.config["SESSION_COOKIE_SECURE"] = True
 else:
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
-    app.config["SESSION_COOKIE_SECURE"] = False  # Allows HTTP cookie testing locally
+    
 # --------------------------------------------
 
 # For production over HTTPS, configure secure cookies and a precise CORS origin.
+frontend_origin = os.getenv("FRONTEND_ORIGIN", "http://localhost:5173")
 CORS(
     app,
     supports_credentials=True,
     origins=[
-        os.getenv("FRONTEND_ORIGIN", "http://localhost:5173"),
+        frontend_origin,
+        re.compile(r"^https://.*\.vercel\.app$"),
+        "http://localhost:5173",
         "http://127.0.0.1:5173",
     ],
 )
