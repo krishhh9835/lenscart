@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import ProductQuickViewModal from "./components/ProductQuickViewModal";
 import {
   ArrowRight,
   CheckCircle2,
@@ -43,6 +44,7 @@ function productImage(product) {
 }
 
 export default function App() {
+  const [quickView, setQuickView] = useState({ open: false, product: null, fallbackImage: "" });
   const [products, setProducts] = useState([]);
   const [page, setPage] = useState("shop");
   const [category, setCategory] = useState("All");
@@ -100,6 +102,12 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+function openQuickView(product) {
+  setQuickView({ open: true, product, fallbackImage: productImage(product) });
+}
+function closeQuickView() {
+  setQuickView({ open: false, product: null, fallbackImage: "" });
+}
   const filteredProducts = useMemo(
     () =>
       products.filter((p) => {
@@ -460,10 +468,12 @@ export default function App() {
                       <article className="product-card">
                         <div className="product-photo">
                           <img
-                            src={productImage(p)}
-                            alt={p.name}
-                            loading="lazy"
-                          />
+                              src={productImage(p)}
+                              alt={p.name}
+                              loading="lazy"
+                              style={{ cursor: "pointer" }}
+                              onClick={() => openQuickView(p)}
+                            />
                           <span className="product-tag">{p.category}</span>
                           {p.stock <= 3 && p.stock > 0 && (
                             <span className="stock-tag">Few left</span>
@@ -1068,6 +1078,18 @@ export default function App() {
           </div>
         </div>
       )}
+
+      
+      <ProductQuickViewModal
+      open={quickView.open}
+      product={quickView.product}
+      fallbackImage={quickView.fallbackImage}
+      onClose={closeQuickView}
+      money={money}
+      cartQty={quickView.product ? (cart[quickView.product.id] || 0) : 0}
+      updateQty={updateQty}
+      setNotice={setNotice}
+      />
     </div>
   );
 }

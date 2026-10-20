@@ -57,6 +57,11 @@ class Product(db.Model):
     active = db.Column(db.Boolean, nullable=False, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
+    images = db.relationship("ProductImage", backref="product", cascade="all, delete-orphan",
+                         order_by="ProductImage.sort_order.asc()")
+    reviews = db.relationship("Review", backref="product", cascade="all, delete-orphan",
+                          order_by="Review.created_at.desc()")
+
     def to_dict(self):
         return {
             "id": self.id,
@@ -68,6 +73,38 @@ class Product(db.Model):
             "price": self.price,
             "stock": self.stock,
             "active": self.active,
+        }
+
+
+class ProductImage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey("product.id"), nullable=False)
+    url = db.Column(db.String(500), nullable=False)
+    sort_order = db.Column(db.Integer, nullable=False, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    def to_dict(self):
+        return {"id": self.id, "url": self.url, "sort_order": self.sort_order}
+
+
+class Review(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey("product.id"), nullable=False)
+    customer_name = db.Column(db.String(120), nullable=False)
+    rating = db.Column(db.Integer, nullable=False)  # 1..5
+    comment = db.Column(db.String(500), nullable=True, default="")
+    approved = db.Column(db.Boolean, nullable=False, default=True)  # keep True for now
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "product_id": self.product_id,
+            "customer_name": self.customer_name,
+            "rating": self.rating,
+            "comment": self.comment or "",
+            "approved": self.approved,
+            "created_at": self.created_at.isoformat(timespec="minutes") + "Z",
         }
 
 
@@ -169,6 +206,77 @@ def health():
 def list_products():
     products = Product.query.filter_by(active=True).order_by(Product.id.desc()).all()
     return jsonify([p.to_dict() for p in products])
+
+
+@app.get("/api/products/<int:product_id>")
+def product_detail(product_id):
+    product = Product.query.filter_by(id=product_id, active=True).first()
+    if not product:
+        return jsonify({"error": "Product not found."}), 404
+
+    # build images list (main image_url + extra images)
+    images = []
+    if product.image_url:
+        images.append(product.image_url)
+    images.extend([img.url for img in product.images])
+
+    # remove duplicates while keeping order
+    seen = set()
+    images = [u for u in images if u and not (u in seen or seen.add(u))]
+
+    approved_reviews = [r for r in product.reviews if r.approved]
+    count = len(approved_reviews)
+    avg = round(sum(r.rating for r in approved_reviews) / count, 1) if count else 0
+
+    payload = product.to_dict()
+    payload.update({
+        "images": images,
+        "rating_avg": avg,
+        "review_count": count,
+    })
+    return jsonify(payload)
+
+
+@app.get("/api/products/<int:product_id>/reviews")
+def product_reviews(product_id):
+    product = Product.query.filter_by(id=product_id, active=True).first()
+    if not product:
+        return jsonify({"error": "Product not found."}), 404
+    rows = Review.query.filter_by(product_id=product_id, approved=True).order_by(Review.created_at.desc()).all()
+    return jsonify([r.to_dict() for r in rows])
+
+
+@app.post("/api/products/<int:product_id>/reviews")
+def add_review(product_id):
+    product = Product.query.filter_by(id=product_id, active=True).first()
+    if not product:
+        return jsonify({"error": "Product not found."}), 404
+
+    data = request.get_json(silent=True) or {}
+    name = str(data.get("customer_name", "")).strip()
+    comment = str(data.get("comment", "")).strip()
+    try:
+        rating = int(data.get("rating"))
+    except (TypeError, ValueError):
+        return jsonify({"error": "Rating must be a number (1 to 5)."}), 400
+
+    if not name or len(name) > 120:
+        return jsonify({"error": "Name is required (max 120 chars)."}), 400
+    if rating < 1 or rating > 5:
+        return jsonify({"error": "Rating must be between 1 and 5."}), 400
+    if len(comment) > 500:
+        return jsonify({"error": "Comment is too long (max 500 chars)."}), 400
+
+    row = Review(
+        product_id=product_id,
+        customer_name=name,
+        rating=rating,
+        comment=comment[:500],
+        approved=True,  # you can change this to False if you want owner approval
+    )
+    db.session.add(row)
+    db.session.commit()
+    return jsonify({"message": "Thanks! Your review was submitted."}), 201
 
 
 @app.post("/api/requests")

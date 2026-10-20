@@ -139,3 +139,36 @@ button,input,textarea,select{font:inherit}
  .login-card{padding:27px}
 }
 @media(min-width:768px) and (max-width:991px){.product-photo{height:190px}.request-list{grid-template-columns:1fr}}
+
+.product-quick-modal {
+  max-width: 1050px;
+}
+
+.product-main-image img {
+  width: 100%;
+  height: 360px;
+  object-fit: cover;
+  border-radius: 16px;
+}
+
+.thumb-row {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+
+.thumb {
+  width: 84px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 12px;
+  cursor: pointer;
+  opacity: 0.75;
+  border: 2px solid transparent;
+}
+
+.thumb.active {
+  opacity: 1;
+  border-color: #111;
+}
