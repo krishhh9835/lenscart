@@ -1,33 +1,33 @@
 import os
+import re
 from datetime import datetime
 from functools import wraps
+
 from dotenv import load_dotenv
-from flask import Flask, jsonify, request, session
+from flask import Flask, jsonify, request, session, send_file
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
-import re
 
 load_dotenv()
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-only-change-this-secret")
-app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL", "sqlite:///chashma_shop.db")
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
+    "DATABASE_URL", "sqlite:///chashma_shop.db"
+)
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-# --- Updated Dynamic Cookie Configuration ---
 is_prod = os.getenv("ENV", "").lower() == "production"
-app.config["SESSION_COOKIE_HTTPONLY"] = True
 
+app.config["SESSION_COOKIE_HTTPONLY"] = True
 if is_prod:
     app.config["SESSION_COOKIE_SAMESITE"] = "None"
     app.config["SESSION_COOKIE_SECURE"] = True
 else:
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
-    
-# --------------------------------------------
 
-# For production over HTTPS, configure secure cookies and a precise CORS origin.
 frontend_origin = os.getenv("FRONTEND_ORIGIN", "http://localhost:5173")
+
 CORS(
     app,
     supports_credentials=True,
@@ -43,8 +43,6 @@ db = SQLAlchemy(app)
 
 OWNER_USERNAME = os.getenv("OWNER_USERNAME", "owner")
 OWNER_PASSWORD = os.getenv("OWNER_PASSWORD", "change-this-password")
-
-VALID_CATEGORIES = {"Frames", "Sunglasses", "Lenses", "Accessories"}
 
 
 class Product(db.Model):
@@ -81,7 +79,12 @@ class PurchaseRequest(db.Model):
     message = db.Column(db.String(500), nullable=True, default="")
     status = db.Column(db.String(30), nullable=False, default="New")
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    items = db.relationship("RequestItem", backref="purchase_request", cascade="all, delete-orphan")
+    items = db.relationship(
+        "RequestItem", backref="purchase_request", cascade="all, delete-orphan"
+    )
+    orders = db.relationship(
+        "Order", backref="purchase_request", cascade="all, delete-orphan"
+    )
 
     def to_dict(self):
         return {
@@ -93,13 +96,17 @@ class PurchaseRequest(db.Model):
             "status": self.status,
             "created_at": self.created_at.isoformat(timespec="minutes") + "Z",
             "items": [item.to_dict() for item in self.items],
-            "estimated_total": sum(item.price_each * item.quantity for item in self.items),
+            "estimated_total": sum(
+                item.price_each * item.quantity for item in self.items
+            ),
         }
 
 
 class RequestItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    request_id = db.Column(db.Integer, db.ForeignKey("purchase_request.id"), nullable=False)
+    request_id = db.Column(
+        db.Integer, db.ForeignKey("purchase_request.id"), nullable=False
+    )
     product_id = db.Column(db.Integer, nullable=True)
     product_name = db.Column(db.String(120), nullable=False)
     quantity = db.Column(db.Integer, nullable=False)
@@ -114,12 +121,42 @@ class RequestItem(db.Model):
         }
 
 
+class Order(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    request_id = db.Column(
+        db.Integer, db.ForeignKey("purchase_request.id"), nullable=True
+    )
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    customer_name = db.Column(db.String(120), nullable=False)
+    phone = db.Column(db.String(30), nullable=False)
+    address = db.Column(db.String(300), nullable=True, default="")
+    status = db.Column(db.String(30), nullable=False, default="Confirmed")
+
+    summary = db.Column(db.String(300), nullable=True, default="")
+    total_amount = db.Column(db.Integer, nullable=False, default=0)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "request_id": self.request_id,
+            "created_at": self.created_at.isoformat(timespec="minutes") + "Z",
+            "customer_name": self.customer_name,
+            "phone": self.phone,
+            "address": self.address or "",
+            "status": self.status,
+            "summary": self.summary or "",
+            "total_amount": self.total_amount,
+        }
+
+
 def owner_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         if not session.get("owner_logged_in"):
             return jsonify({"error": "Please log in as the shop owner."}), 401
         return fn(*args, **kwargs)
+
     return wrapper
 
 
@@ -144,11 +181,23 @@ def create_request():
     items = data.get("items", [])
 
     if not name or len(name) > 120:
-        return jsonify({"error": "Please enter your name (maximum 120 characters)."}), 400
+        return (
+            jsonify(
+                {"error": "Please enter your name (maximum 120 characters)."}
+            ),
+            400,
+        )
     if not phone or len(phone) > 30:
         return jsonify({"error": "Please enter a valid contact number."}), 400
     if not isinstance(items, list) or not items or len(items) > 30:
-        return jsonify({"error": "Please select at least one product (maximum 30 different items)."}), 400
+        return (
+            jsonify(
+                {
+                    "error": "Please select at least one product (maximum 30 different items)."
+                }
+            ),
+            400,
+        )
 
     clean_items = []
     for row in items:
@@ -157,41 +206,59 @@ def create_request():
             quantity = int(row.get("quantity"))
         except (TypeError, ValueError, AttributeError):
             return jsonify({"error": "Product or quantity is invalid."}), 400
-
         if quantity < 1 or quantity > 99:
-            return jsonify({"error": "Each quantity must be between 1 and 99."}), 400
-
+            return (
+                jsonify(
+                    {"error": "Each quantity must be between 1 and 99."}
+                ),
+                400,
+            )
         product = Product.query.filter_by(id=product_id, active=True).first()
         if not product:
-            return jsonify({"error": "A selected product is no longer available. Please refresh the page."}), 400
+            return (
+                jsonify(
+                    {
+                        "error": "A selected product is no longer available. Please refresh the page."
+                    }
+                ),
+                400,
+            )
         if product.stock < quantity:
-            return jsonify({"error": f"Only {product.stock} unit(s) currently available for {product.name}."}), 400
-
+            return (
+                jsonify(
+                    {
+                        "error": f"Only {product.stock} unit(s) currently available for {product.name}."
+                    }
+                ),
+                400,
+            )
         clean_items.append((product, quantity))
 
     purchase = PurchaseRequest(
-        customer_name=name,
-        phone=phone,
-        address=address[:300],
-        message=message[:500],
+        customer_name=name, phone=phone, address=address, message=message
     )
     db.session.add(purchase)
     db.session.flush()
-
     for product, quantity in clean_items:
-        db.session.add(RequestItem(
-            request_id=purchase.id,
-            product_id=product.id,
-            product_name=product.name,
-            quantity=quantity,
-            price_each=product.price,
-        ))
-
+        db.session.add(
+            RequestItem(
+                request_id=purchase.id,
+                product_id=product.id,
+                product_name=product.name,
+                quantity=quantity,
+                price_each=product.price,
+            )
+        )
     db.session.commit()
-    return jsonify({
-        "message": "Your purchase request has been submitted. The shop owner will contact you.",
-        "request_id": purchase.id,
-    }), 201
+    return (
+        jsonify(
+            {
+                "message": "Your purchase request has been submitted. The shop owner will contact you.",
+                "request_id": purchase.id,
+            }
+        ),
+        201,
+    )
 
 
 @app.post("/api/owner/login")
@@ -199,10 +266,8 @@ def owner_login():
     data = request.get_json(silent=True) or {}
     username = str(data.get("username", ""))
     password = str(data.get("password", ""))
-
     if username != OWNER_USERNAME or password != OWNER_PASSWORD:
         return jsonify({"error": "Incorrect username or password."}), 401
-
     session.clear()
     session["owner_logged_in"] = True
     return jsonify({"message": "Logged in successfully."})
@@ -232,7 +297,6 @@ def update_request_status(request_id):
     row = db.session.get(PurchaseRequest, request_id)
     if not row:
         return jsonify({"error": "Request not found."}), 404
-
     data = request.get_json(silent=True) or {}
     allowed = {"New", "Contacted", "Confirmed", "Completed", "Cancelled"}
     status = data.get("status")
@@ -240,6 +304,31 @@ def update_request_status(request_id):
         return jsonify({"error": "Invalid request status."}), 400
 
     row.status = status
+
+    # when confirmed, create an Order history row if not already
+    if status == "Confirmed":
+        existing = Order.query.filter_by(request_id=row.id).first()
+        if not existing:
+            total = sum(
+                item.price_each * item.quantity for item in row.items
+            )
+            summary_parts = [
+                f"{it.product_name} x{it.quantity}" for it in row.items[:3]
+            ]
+            summary = ", ".join(summary_parts)
+            if len(row.items) > 3:
+                summary += f" (+{len(row.items) - 3} more)"
+            order = Order(
+                request_id=row.id,
+                customer_name=row.customer_name,
+                phone=row.phone,
+                address=row.address,
+                status="Confirmed",
+                summary=summary[:300],
+                total_amount=total,
+            )
+            db.session.add(order)
+
     db.session.commit()
     return jsonify(row.to_dict())
 
@@ -255,12 +344,17 @@ def add_product():
         stock = int(data.get("stock"))
     except (TypeError, ValueError):
         return jsonify({"error": "Enter a valid price and stock quantity."}), 400
-
     if not name or len(name) > 120 or price < 0 or stock < 0:
-        return jsonify({"error": "Product name is required; price and stock cannot be negative."}), 400
-    if category not in VALID_CATEGORIES:
+        return (
+            jsonify(
+                {
+                    "error": "Product name is required; price and stock cannot be negative."
+                }
+            ),
+            400,
+        )
+    if category not in {"Frames", "Sunglasses", "Lenses", "Accessories"}:
         return jsonify({"error": "Choose a valid category."}), 400
-
     product = Product(
         name=name,
         category=category,
@@ -281,7 +375,6 @@ def edit_product(product_id):
     product = db.session.get(Product, product_id)
     if not product:
         return jsonify({"error": "Product not found."}), 404
-
     data = request.get_json(silent=True) or {}
     try:
         if "name" in data:
@@ -294,25 +387,25 @@ def edit_product(product_id):
         if "stock" in data:
             product.stock = int(data["stock"])
         if "category" in data:
-            if data["category"] not in VALID_CATEGORIES:
-                db.session.rollback()
+            if data["category"] not in {
+                "Frames",
+                "Sunglasses",
+                "Lenses",
+                "Accessories",
+            }:
                 return jsonify({"error": "Choose a valid category."}), 400
             product.category = data["category"]
     except (TypeError, ValueError):
-        db.session.rollback()
         return jsonify({"error": "Enter valid product details."}), 400
-
     if product.price < 0 or product.stock < 0:
-        db.session.rollback()
-        return jsonify({"error": "Price and stock cannot be negative."}), 400
-
-    limits = {"brand": 80, "description": 500, "image_url": 500}
-    for key, limit in limits.items():
+        return jsonify(
+            {"error": "Price and stock cannot be negative."}
+        ), 400
+    for key in ("brand", "description", "image_url"):
         if key in data:
-            setattr(product, key, str(data[key]).strip()[:limit])
+            setattr(product, key, str(data[key]).strip()[:500])
     if "active" in data:
         product.active = bool(data["active"])
-
     db.session.commit()
     return jsonify(product.to_dict())
 
@@ -323,32 +416,116 @@ def deactivate_product(product_id):
     product = db.session.get(Product, product_id)
     if not product:
         return jsonify({"error": "Product not found."}), 404
-
     product.active = False
     db.session.commit()
     return jsonify({"message": "Product hidden from the public catalogue."})
 
 
+# ------ Orders (history) APIs ------
+
+
+@app.get("/api/owner/orders")
+@owner_required
+def list_orders():
+    rows = Order.query.order_by(Order.created_at.desc()).all()
+    return jsonify([row.to_dict() for row in rows])
+
+
+@app.post("/api/owner/orders")
+@owner_required
+def create_order():
+    data = request.get_json(silent=True) or {}
+
+    try:
+        customer_name = str(data.get("customer_name", "")).strip()
+        phone = str(data.get("phone", "")).strip()
+        address = str(data.get("address", "")).strip()
+        summary = str(data.get("summary", "")).strip()
+        status = str(data.get("status", "Confirmed")).strip()
+        total_amount = int(data.get("total_amount", 0))
+    except (TypeError, ValueError):
+        return jsonify({"error": "Enter valid order details."}), 400
+
+    if not customer_name or len(customer_name) > 120:
+        return (
+            jsonify(
+                {
+                    "error": "Customer name is required (max 120 characters)."
+                }
+            ),
+            400,
+        )
+    if not phone or len(phone) > 30:
+        return jsonify({"error": "Phone is required (max 30 characters)."}), 400
+    if total_amount < 0:
+        return jsonify({"error": "Total amount cannot be negative."}), 400
+
+    allowed_statuses = {"Confirmed", "Completed", "Cancelled"}
+    if status not in allowed_statuses:
+        return jsonify({"error": "Invalid order status."}), 400
+
+    order = Order(
+        request_id=data.get("request_id"),  # may be null
+        customer_name=customer_name,
+        phone=phone,
+        address=address[:300],
+        status=status,
+        summary=summary[:300],
+        total_amount=total_amount,
+    )
+    db.session.add(order)
+    db.session.commit()
+
+    return jsonify(order.to_dict()), 201
+
+
 def seed_products():
     if Product.query.count() == 0:
-        db.session.add_all([
-            Product(name="Classic Black Frame", category="Frames", brand="Everyday",
-                    description="Lightweight everyday frame.", price=799, stock=12),
-            Product(name="Modern Round Frame", category="Frames", brand="Studio",
-                    description="Round frame with a clean, modern look.", price=999, stock=8),
-            Product(name="UV Protection Sunglasses", category="Sunglasses", brand="Sunline",
-                    description="Stylish sunglasses for everyday outdoor use.", price=1299, stock=6),
-            Product(name="Lens Pair - Standard", category="Lenses", brand="ClearView",
-                    description="Lens option; prescription suitability will be confirmed by the shop.",
-                    price=599, stock=10),
-        ])
+        db.session.add_all(
+            [
+                Product(
+                    name="Classic Black Frame",
+                    category="Frames",
+                    brand="Everyday",
+                    description="Lightweight everyday frame.",
+                    price=799,
+                    stock=12,
+                ),
+                Product(
+                    name="Modern Round Frame",
+                    category="Frames",
+                    brand="Studio",
+                    description="Round frame with a clean, modern look.",
+                    price=999,
+                    stock=8,
+                ),
+                Product(
+                    name="UV Protection Sunglasses",
+                    category="Sunglasses",
+                    brand="Sunline",
+                    description="Stylish sunglasses for everyday outdoor use.",
+                    price=1299,
+                    stock=6,
+                ),
+                Product(
+                    name="Lens Pair - Standard",
+                    category="Lenses",
+                    brand="ClearView",
+                    description=(
+                        "Lens option; prescription suitability will be "
+                        "confirmed by the shop."
+                    ),
+                    price=599,
+                    stock=10,
+                ),
+            ]
+        )
         db.session.commit()
 
 
 with app.app_context():
     db.create_all()
     seed_products()
-
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
