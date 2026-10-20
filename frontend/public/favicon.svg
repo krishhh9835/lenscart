@@ -1,0 +1,6 @@
+<!-- frontend/public/favicon.svg -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <rect width="256" height="256" rx="56" fill="#D61F2C"/>
+  <path d="M72 120c0-14 10-24 24-24h24c14 0 24 10 24 24v20c0 14-10 24-24 24H96c-14 0-24-10-24-24v-20Zm112 0c0-14-10-24-24-24h-24c-14 0-24 10-24 24v20c0 14 10 24 24 24h24c14 0 24-10 24-24v-20Z" fill="#fff"/>
+  <path d="M112 126h32" stroke="#F6C343" stroke-width="12" stroke-linecap="round"/>
+</svg>

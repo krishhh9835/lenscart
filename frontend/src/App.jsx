@@ -281,21 +281,13 @@ function closeQuickView() {
     <div className="app-shell">
       <nav className="navbar navbar-expand-lg navbar-light bg-white sticky-top border-bottom">
         <div className="container py-1">
-          <button
-            className="navbar-brand brand-mark border-0 bg-transparent"
-            onClick={() => {
-              setPage("shop");
-              setNotice(null);
-            }}
-          >
-            <span className="brand-icon">
-              <Glasses size={23} />
-            </span>
-            <span>
-              lens<span className="brand-accent">&</span>look
-              <small>OPTICAL STUDIO</small>
-            </span>
-          </button>
+           <button
+  className="navbar-brand brand-mark border-0 bg-transparent"
+  onClick={() => { setPage("shop"); setNotice(null); }}
+>
+  <span className="brand-icon"><Glasses size={23} /></span>
+  <span className="brand-name">चश्मा वाले</span>
+</button>
           <button
             className="navbar-toggler"
             data-bs-toggle="collapse"
@@ -481,7 +473,7 @@ function closeQuickView() {
                         </div>
                         <div className="product-info">
                           <div className="product-brand">
-                            {p.brand || "LENS & LOOK"}
+                            {p.brand || "Chashma Wale"}
                           </div>
                           <h3>{p.name}</h3>
                           <p className="product-desc">

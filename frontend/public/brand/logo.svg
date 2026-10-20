@@ -1,0 +1,26 @@
+<!-- frontend/public/brand/logo.svg -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 200">
+  <defs>
+    <linearGradient id="g" x1="0" x2="1">
+      <stop offset="0" stop-color="#D61F2C"/>
+      <stop offset="1" stop-color="#B01722"/>
+    </linearGradient>
+  </defs>
+
+  <!-- glasses icon -->
+  <g transform="translate(30 62)">
+    <rect x="0" y="18" width="110" height="70" rx="20" fill="url(#g)"/>
+    <rect x="140" y="18" width="110" height="70" rx="20" fill="url(#g)"/>
+    <rect x="104" y="48" width="46" height="10" rx="5" fill="#F6C343"/>
+    <circle cx="55" cy="53" r="18" fill="rgba(255,255,255,.25)"/>
+    <circle cx="195" cy="53" r="18" fill="rgba(255,255,255,.25)"/>
+  </g>
+
+  <!-- name -->
+  <text x="320" y="105" font-family="Inter, Arial, sans-serif" font-size="56" font-weight="800" fill="#101828">
+    Chashma <tspan fill="#D61F2C">&amp;</tspan> Look
+  </text>
+  <text x="324" y="145" font-family="Noto Sans Devanagari, Arial, sans-serif" font-size="26" font-weight="700" fill="#667085">
+    चश्मा वाले • Optical Studio
+  </text>
+</svg>
