@@ -71,12 +71,7 @@ class Product(db.Model):
                          order_by="ProductImage.sort_order.asc()")
     reviews = db.relationship("Review", backref="product", cascade="all, delete-orphan",
                           order_by="Review.created_at.desc()")
-    images = db.relationship(
-    "ProductImage",
-    backref="product",
-    cascade="all, delete-orphan",
-    order_by="ProductImage.sort_order.asc()",
-)
+    
     def to_dict(self):
         return {
             "id": self.id,
@@ -92,33 +87,28 @@ class Product(db.Model):
         }
 
 class ProductImage(db.Model):
+    __tablename__ = "product_image"   # (ya "product_images" rakhna ho to rakh sakte ho)
     id = db.Column(db.Integer, primary_key=True)
-    product_id = db.Column(db.Integer, db.ForeignKey("product.id"), nullable=False)
-    url = db.Column(db.String(500), nullable=False)
-    public_id = db.Column(db.String(300), nullable=True, default="")   # cloudinary public id
-    variant = db.Column(db.String(60), nullable=True, default="")      # e.g. "Black", "Blue"
-    sort_order = db.Column(db.Integer, nullable=False, default=0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    product_id = db.Column(db.Integer, db.ForeignKey("product.id"), nullable=False, index=True)
+    url = db.Column(db.Text, nullable=False)
+    public_id = db.Column(db.Text, nullable=True)
+
+    variant = db.Column(db.String(50), nullable=True)   # e.g. "black", "blue"
+    sort_order = db.Column(db.Integer, default=0, nullable=False)
+
+    
 
     def to_dict(self):
         return {
             "id": self.id,
             "product_id": self.product_id,
             "url": self.url,
-            "variant": self.variant or "",
+            "public_id": self.public_id,
+            "variant": self.variant,
             "sort_order": self.sort_order,
         }
 
-
-class ProductImage(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    product_id = db.Column(db.Integer, db.ForeignKey("product.id"), nullable=False)
-    url = db.Column(db.String(500), nullable=False)
-    sort_order = db.Column(db.Integer, nullable=False, default=0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-
-    def to_dict(self):
-        return {"id": self.id, "url": self.url, "sort_order": self.sort_order}
 
 
 class Review(db.Model):
