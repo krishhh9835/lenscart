@@ -44,6 +44,14 @@ function productImage(product) {
 }
 
 export default function App() {
+  const SHOP_NAME = import.meta.env.VITE_SHOP_NAME || "चश्मा वाले";
+  const SHOP_ADDRESS = import.meta.env.VITE_SHOP_ADDRESS || "";
+  const OWNER_EMAIL = import.meta.env.VITE_OWNER_EMAIL || "";
+  const SHOP_PHONE = import.meta.env.VITE_SHOP_PHONE || "";
+
+  const mapsLink = SHOP_ADDRESS
+  ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(SHOP_ADDRESS)}`
+  : "";
   const [quickView, setQuickView] = useState({ open: false, product: null, fallbackImage: "" });
   const [products, setProducts] = useState([]);
   const [page, setPage] = useState("shop");
@@ -368,9 +376,9 @@ function closeQuickView() {
                     <Sparkles size={15} /> YOUR EVERYDAY EYEWEAR DESTINATION
                   </span>
                   <h1>
-                    A clearer view.
+                    
                     <br />
-                    <span>A better you.</span>
+                    <span></span>
                   </h1>
                   <p>
                     Find frames that feel like you. Explore our collection and
@@ -385,23 +393,17 @@ function closeQuickView() {
                   </a>
                   <div className="hero-trust">
                     <span>
-                      <CheckCircle2 size={16} /> Friendly service
+                      <CheckCircle2 size={16} /> 
                     </span>
                     <span>
-                      <CheckCircle2 size={16} /> Easy requests
+                      <CheckCircle2 size={16} /> 
                     </span>
                   </div>
                 </div>
                 <div className="hero-art" aria-label="Eyeglasses illustration">
                   <div className="hero-orbit orbit-one"></div>
                   <div className="hero-orbit orbit-two"></div>
-                  <div className="hero-sticker">
-                    FIND
-                    <br />
-                    YOUR
-                    <br />
-                    <b>FRAME</b>
-                  </div>
+                  
                   <div className="glasses-art">
                     <div className="lens lens-left"></div>
                     <div className="bridge"></div>
@@ -548,6 +550,46 @@ function closeQuickView() {
                 </button>
               </div>
             </section>
+            <section className="container py-5">
+  <div className="contact-grid">
+    <div className="contact-card">
+      <span className="eyebrow">VISIT OUR SHOP</span>
+      <h2 className="mb-2">चश्मा वाले</h2>
+
+      <p className="mb-2 text-secondary">
+        Google Maps par location dekhne ke liye “Get Directions” use karein.
+      </p>
+
+      <div className="d-flex flex-wrap gap-2 mt-3">
+        <a
+          className="btn btn-dark rounded-pill"
+          href="https://maps.app.goo.gl/2uJFbYdYtD5BLUoh9"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Get Directions
+        </a>
+
+        {/* optional */}
+        { <a className="btn btn-outline-dark rounded-pill" href="tel:9430638287">Call</a> }
+        {<a className="btn btn-outline-dark rounded-pill" href="mailto:monu@example.com">Email</a> }
+      </div>
+    </div>
+
+    <div className="map-card">
+      <div className="map-embed">
+        <iframe
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d7197.759957742618!2d85.10931100608876!3d25.575659536834117!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39f2a74e31d7947f%3A0x1195239dfd940022!2sChashma%20Vale!5e0!3m2!1sen!2sin!4v1792560916109!5m2!1sen!2sin"
+          allowFullScreen=""
+          loading="lazy"
+          referrerPolicy="strict-origin-when-cross-origin"
+          title="Chashma Vale - Google Map"
+        />
+      </div>
+    </div>
+  </div>
+</section>
+ 
           </>
         )}
 

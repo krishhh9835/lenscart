@@ -1,3 +1,7 @@
+/* =========================
+   Chashma Wale Theme (Full)
+   ========================= */
+
 :root{
   --brand-red:#D61F2C;
   --brand-red-dark:#B01722;
@@ -19,12 +23,16 @@
 }
 
 *{ box-sizing:border-box; }
+
 body{
-  background: #FFF8F5;
-  color: #101828;
+  background: var(--bg);
+  color: var(--ink);
   font-family: Inter, "Noto Sans Devanagari", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 }
-/* ---------- Bootstrap-ish overrides (you use Bootstrap classes) ---------- */
+
+/* -------------------------
+   Bootstrap-ish overrides
+-------------------------- */
 .btn-dark{
   background: var(--brand-red) !important;
   border-color: var(--brand-red) !important;
@@ -40,14 +48,25 @@ body{
 .btn-outline-dark:hover{
   background: rgba(16,24,40,.06) !important;
 }
+
 .alert-success{ border-color: rgba(34,197,94,.25) !important; }
 .alert-danger{ border-color: rgba(239,68,68,.25) !important; }
 
-/* ---------- Navbar ---------- */
+/* -------------------------
+   Shell
+-------------------------- */
+.app-shell{
+  min-height: 100vh;
+}
+
+/* -------------------------
+   Navbar
+-------------------------- */
 .navbar{
-  background: rgba(255,255,255,.80) !important;
+  background: rgba(255,255,255,.86) !important;
   backdrop-filter: blur(10px);
 }
+
 .brand-mark{
   display:flex;
   align-items:center;
@@ -55,6 +74,7 @@ body{
   padding: 0;
   font-weight: 900;
 }
+
 .brand-icon{
   width: 38px;
   height: 38px;
@@ -63,38 +83,41 @@ body{
   border-radius: 14px;
   background: linear-gradient(135deg, var(--brand-red), var(--brand-red-dark));
   color: #fff;
-  box-shadow: 0 12px 26px rgba(214,31,44,.25);
+  box-shadow: 0 12px 26px rgba(214,31,44,.22);
 }
-.brand-mark small{
-  display:block;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--muted);
-  letter-spacing: .7px;
-  margin-top: -2px;
+
+.brand-name{
+  font-family: "Noto Sans Devanagari", Inter, system-ui, sans-serif;
+  font-weight: 900;
+  letter-spacing: .2px;
+  font-size: 18px;
+  line-height: 1;
 }
+
 .brand-accent{ color: var(--brand-red); }
+
 .active-link{
-  font-weight: 800;
+  font-weight: 900;
   color: var(--brand-red) !important;
 }
+
 .nav-owner{
   box-shadow: 0 14px 30px rgba(214,31,44,.18);
 }
 
-/* ---------- Hero ---------- */
+/* -------------------------
+   Hero (photo visible + lenskart-like overlay)
+-------------------------- */
 .hero-section{
   position: relative;
   padding: 66px 0;
   color: #fff;
-  overflow: hidden;
+  overflow:hidden;
   border-bottom: 1px solid rgba(255,255,255,.18);
 
-  /* ONLY photo here */
   background: url("/brand/shop-front.jpg") center/cover no-repeat;
 }
 
-/* This overlay is lighter + left side stronger like Lenskart banners */
 .hero-section::before{
   content:"";
   position:absolute;
@@ -107,7 +130,6 @@ body{
   );
 }
 
-/* soft vignette to make text pop but photo still visible */
 .hero-section::after{
   content:"";
   position:absolute;
@@ -120,24 +142,12 @@ body{
   z-index: 1;
 }
 
-hero-copy{
-  background: rgba(16,24,40,.18);
-  border: 1px solid rgba(255,255,255,.14);
-  border-radius: 22px;
-  padding: 18px 18px;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 18px 60px rgba(16,24,40,.18);
-}
-  /* photo + red overlay */
- 
-
 .hero-grid{
   display:grid;
   grid-template-columns: 1.1fr .9fr;
   gap: 26px;
   align-items:center;
 }
-
 @media (max-width: 992px){
   .hero-grid{ grid-template-columns: 1fr; }
 }
@@ -146,18 +156,27 @@ hero-copy{
   display:inline-flex;
   align-items:center;
   gap: 8px;
-  font-weight: 800;
+  font-weight: 900;
   font-size: 12px;
   letter-spacing: .9px;
-  opacity: .95;
+  opacity: .96;
   background: rgba(255,255,255,.12);
   padding: 8px 12px;
   border-radius: 999px;
   border: 1px solid rgba(255,255,255,.18);
 }
 
+.hero-copy{
+  background: rgba(16,24,40,.18);
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 22px;
+  padding: 18px 18px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 18px 60px rgba(16,24,40,.18);
+}
+
 .hero-copy h1{
-  font-weight: 900;
+  font-weight: 950;
   letter-spacing: -.6px;
   line-height: 1.06;
   margin: 14px 0 10px;
@@ -165,7 +184,7 @@ hero-copy{
 .hero-copy h1 span{ color: var(--brand-yellow); }
 .hero-copy p{
   opacity:.95;
-  max-width: 52ch;
+  max-width: 55ch;
 }
 
 .hero-trust{
@@ -173,7 +192,6 @@ hero-copy{
   flex-wrap:wrap;
   gap: 10px 16px;
   margin-top: 16px;
-  opacity:.98;
 }
 .hero-trust span{
   display:inline-flex;
@@ -185,20 +203,24 @@ hero-copy{
   border-radius: 999px;
 }
 
-/* Your existing hero-art already looks good; just polish */
+/* If your old UI uses these hero-art classes, keep them safe */
 .hero-art{
   position:relative;
   border-radius: var(--radius-xl);
   background: rgba(255,255,255,.08);
   border: 1px solid rgba(255,255,255,.16);
   padding: 18px;
+  overflow: hidden;
 }
-.hero-caption{
-  margin-top: 12px;
-  font-weight: 800;
-  letter-spacing: .6px;
-  opacity:.95;
+.hero-orbit{
+  position:absolute;
+  border-radius: 999px;
+  border: 1px dashed rgba(255,255,255,.22);
+  opacity:.55;
 }
+.orbit-one{ width: 340px; height: 340px; top: -70px; right: -90px; }
+.orbit-two{ width: 240px; height: 240px; bottom: -70px; left: -90px; }
+
 .hero-sticker{
   position:absolute;
   top: 16px;
@@ -211,7 +233,53 @@ hero-copy{
   box-shadow: 0 14px 40px rgba(0,0,0,.18);
 }
 
-/* ---------- Collection header / search ---------- */
+.hero-caption{
+  margin-top: 12px;
+  font-weight: 900;
+  letter-spacing: .6px;
+  opacity:.95;
+}
+
+/* Basic glasses art fallback (safe if you already had it) */
+.glasses-art{
+  position: relative;
+  height: 180px;
+  margin-top: 30px;
+}
+.lens{
+  position:absolute;
+  width: 140px;
+  height: 90px;
+  border-radius: 28px;
+  border: 3px solid rgba(255,255,255,.85);
+  background: rgba(255,255,255,.08);
+}
+.lens-left{ left: 60px; top: 40px; }
+.lens-right{ right: 60px; top: 40px; }
+.bridge{
+  position:absolute;
+  left: 50%;
+  top: 80px;
+  width: 60px;
+  height: 8px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: rgba(246,195,67,.95);
+}
+.arm{
+  position:absolute;
+  width: 90px;
+  height: 8px;
+  top: 68px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.65);
+}
+.arm-left{ left: -10px; transform: rotate(-12deg); }
+.arm-right{ right: -10px; transform: rotate(12deg); }
+
+/* -------------------------
+   Collection heading + search
+-------------------------- */
 .section-heading{
   display:flex;
   align-items:flex-end;
@@ -222,10 +290,12 @@ hero-copy{
 @media (max-width: 768px){
   .section-heading{ flex-direction:column; align-items:flex-start; }
 }
+
 .section-heading h2{
-  font-weight: 900;
+  font-weight: 950;
   letter-spacing: -.4px;
 }
+
 .search-box{
   display:flex;
   align-items:center;
@@ -246,7 +316,9 @@ hero-copy{
   .search-box input{ width: 200px; }
 }
 
-/* ---------- Category pills ---------- */
+/* -------------------------
+   Category pills
+-------------------------- */
 .category-row{
   display:flex;
   flex-wrap:wrap;
@@ -254,10 +326,10 @@ hero-copy{
 }
 .category-pill{
   border: 1px solid var(--border);
-  background: rgba(255,255,255,.80);
+  background: rgba(255,255,255,.85);
   padding: 8px 14px;
   border-radius: 999px;
-  font-weight: 750;
+  font-weight: 900;
   color: var(--ink);
   transition: transform .12s ease, background .12s ease;
 }
@@ -267,7 +339,9 @@ hero-copy{
   border-color: rgba(246,195,67,.55);
 }
 
-/* ---------- Product card ---------- */
+/* -------------------------
+   Product cards
+-------------------------- */
 .product-card{
   background: var(--surface);
   border: 1px solid var(--border);
@@ -280,6 +354,7 @@ hero-copy{
   transform: translateY(-2px);
   box-shadow: 0 18px 46px rgba(16,24,40,.12);
 }
+
 .product-photo{
   position: relative;
   background: #fff;
@@ -290,6 +365,7 @@ hero-copy{
   object-fit: cover;
   display:block;
 }
+
 .product-tag{
   position:absolute;
   top: 12px;
@@ -306,7 +382,7 @@ hero-copy{
   right: 12px;
   background: rgba(246,195,67,.95);
   color: #3a2a00;
-  font-weight: 900;
+  font-weight: 950;
   font-size: 12px;
   padding: 6px 10px;
   border-radius: 999px;
@@ -317,13 +393,13 @@ hero-copy{
 }
 .product-brand{
   color: var(--muted);
-  font-weight: 800;
+  font-weight: 900;
   font-size: 12px;
   letter-spacing: .4px;
 }
 .product-info h3{
   font-size: 16px;
-  font-weight: 900;
+  font-weight: 950;
   margin: 6px 0 8px;
 }
 .product-desc{
@@ -331,11 +407,15 @@ hero-copy{
   font-size: 13px;
   min-height: 38px;
 }
+
 .product-bottom{
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap: 12px;
+}
+.add-btn{
+  padding: 8px 14px;
 }
 
 .quantity-control{
@@ -357,7 +437,9 @@ hero-copy{
   background: #fff;
 }
 
-/* ---------- Request strip ---------- */
+/* -------------------------
+   Request strip
+-------------------------- */
 .request-strip{
   margin-top: 30px;
   background:
@@ -368,16 +450,79 @@ hero-copy{
   padding: 34px 0;
 }
 
-/* ---------- Owner dashboard ---------- */
-.owner-wrap .metric-card{
+/* -------------------------
+   Login page
+-------------------------- */
+.login-wrap{
+  padding: 48px 0;
+  display:flex;
+  justify-content:center;
+}
+.login-card{
+  width: min(480px, 100%);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 18px;
+  box-shadow: var(--shadow-sm);
+}
+.login-icon{
+  width: 54px;
+  height: 54px;
+  border-radius: 18px;
+  background: rgba(214,31,44,.10);
+  border: 1px solid rgba(214,31,44,.20);
+  display:grid;
+  place-items:center;
+  color: var(--brand-red);
+}
+
+/* -------------------------
+   Owner dashboard (fix layout)
+-------------------------- */
+.owner-heading h1{
+  font-size: 34px;
+  line-height: 1.1;
+  margin-bottom: 6px;
+  font-weight: 950;
+}
+.owner-heading p{
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.metric-card{
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 14px;
   box-shadow: var(--shadow-sm);
+
+  display:flex;
+  flex-direction: column;
+  gap: 6px;
 }
-.metric-card span{ color: var(--muted); font-weight: 800; font-size: 12px; }
-.metric-card strong{ font-size: 28px; font-weight: 950; }
+
+.metric-card span,
+.metric-card strong,
+.metric-card small{
+  display:block;
+}
+
+.metric-card span{
+  color: var(--muted);
+  font-weight: 900;
+  font-size: 12px;
+}
+.metric-card strong{
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 950;
+}
+.metric-card small{
+  font-size: 12px;
+  color: var(--muted);
+}
 
 .owner-tabs{
   display:flex;
@@ -387,10 +532,10 @@ hero-copy{
 }
 .owner-tabs button{
   border: 1px solid var(--border);
-  background: rgba(255,255,255,.85);
+  background: rgba(255,255,255,.90);
   border-radius: 999px;
   padding: 10px 14px;
-  font-weight: 850;
+  font-weight: 950;
 }
 .owner-tabs button.selected{
   border-color: rgba(214,31,44,.35);
@@ -401,7 +546,7 @@ hero-copy{
   background: rgba(16,24,40,.07);
   border-radius: 999px;
   padding: 2px 8px;
-  font-weight: 900;
+  font-weight: 950;
 }
 
 .dashboard-panel{
@@ -421,136 +566,16 @@ hero-copy{
   border-radius: 999px;
   border: 1px solid rgba(16,24,40,.12);
   background: rgba(16,24,40,.04);
-  font-weight: 900;
+  font-weight: 950;
 }
 .stock-pill.low{
   background: rgba(246,195,67,.25);
   border-color: rgba(246,195,67,.6);
 }
 
-/* ---------- Modal (used by your request modal + product quick view) ---------- */
-.modal-backdrop-custom{
-  position: fixed;
-  inset: 0;
-  background: rgba(16,24,40,.55);
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  padding: 18px;
-  z-index: 9999;
-}
-.request-modal{
-  width: min(1040px, 100%);
-  background: var(--surface);
-  border-radius: 22px;
-  box-shadow: var(--shadow);
-  padding: 18px;
-}
-.modal-head{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-.icon-close{
-  width: 42px;
-  height: 42px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: white;
-  display:grid;
-  place-items:center;
-}
-
-/* ---------- Footer ---------- */
-.site-footer{
-  border-top: 1px solid rgba(16,24,40,.08);
-  padding: 26px 0;
-  background: rgba(255,255,255,.75);
-}
-.footer-brand{
-  font-weight: 950;
-}
-
-.btn-dark{
-  background: #D61F2C !important;
-  border-color: #D61F2C !important;
-}
-.btn-dark:hover{
-  background: #B01722 !important;
-  border-color: #B01722 !important;
-}
-
-.brand-name{
-  font-family: "Noto Sans Devanagari", Inter, system-ui, sans-serif;
-  font-weight: 900;
-  letter-spacing: .2px;
-  font-size: 18px;
-  line-height: 1;
-}
-
-/* --- FIX owner dashboard layout --- */
-.owner-heading h1{
-  font-size: 34px;
-  line-height: 1.1;
-  margin-bottom: 6px;
-}
-
-.owner-heading p{
-  color: var(--muted);
-  margin-bottom: 10px;
-}
-
-.metric-card{
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.metric-card span,
-.metric-card strong,
-.metric-card small{
-  display: block;
-}
-
-.metric-card strong{
-  font-size: 28px;
-  line-height: 1;
-  font-weight: 900;
-}
-
-.metric-card span{
-  font-size: 12px;
-  font-weight: 800;
-  color: var(--muted);
-}
-
-.metric-card small{
-  font-size: 12px;
-  color: var(--muted);
-}
-
-/* request card small polish */
-.request-card h3{
-  margin: 6px 0;
-  font-weight: 900;
-}
-.request-items .request-item{
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-}
-.request-total{
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  padding-top: 8px;
-  border-top: 1px solid rgba(16,24,40,.08);
-}
-
-/* ===== Owner Requests: clean card UI ===== */
-
+/* -------------------------
+   Owner Requests (CLEAN FIX)
+-------------------------- */
 .request-list{
   display: grid;
   gap: 14px;
@@ -575,7 +600,7 @@ hero-copy{
 .request-id{
   display: inline-block;
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 950;
   letter-spacing: .6px;
   color: var(--muted);
   text-transform: uppercase;
@@ -583,14 +608,14 @@ hero-copy{
 
 .request-card h3{
   margin: 6px 0 4px;
-  font-weight: 900;
+  font-weight: 950;
   font-size: 20px;
   line-height: 1.15;
 }
 
 .phone-link{
   display: inline-block;
-  font-weight: 800;
+  font-weight: 900;
   text-decoration: none;
 }
 
@@ -619,7 +644,7 @@ hero-copy{
 }
 
 .request-item strong{
-  font-weight: 900;
+  font-weight: 950;
 }
 
 .request-total{
@@ -644,10 +669,10 @@ hero-copy{
 }
 
 .request-note b{
-  font-weight: 900;
+  font-weight: 950;
 }
 
-/* Mobile: stack status dropdown below name */
+/* Mobile: stack status dropdown */
 @media (max-width: 520px){
   .request-card-top{
     flex-direction: column;
@@ -656,5 +681,275 @@ hero-copy{
   .status-select{
     max-width: 100%;
     width: 100%;
+  }
+}
+
+/* -------------------------
+   Modal (request modal + product quick view)
+-------------------------- */
+.modal-backdrop-custom{
+  position: fixed;
+  inset: 0;
+  background: rgba(16,24,40,.55);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding: 18px;
+  z-index: 9999;
+}
+
+.request-modal{
+  width: min(1040px, 100%);
+  background: var(--surface);
+  border-radius: 22px;
+  box-shadow: var(--shadow);
+  padding: 18px;
+}
+
+.modal-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.icon-close{
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: white;
+  display:grid;
+  place-items:center;
+}
+
+/* Selected items summary inside request modal */
+.selected-summary{
+  background: rgba(16,24,40,.03);
+  border: 1px solid rgba(16,24,40,.06);
+  border-radius: 16px;
+  padding: 12px;
+  margin-bottom: 14px;
+}
+.summary-line{
+  display:flex;
+  justify-content:space-between;
+  gap: 12px;
+  padding: 6px 0;
+}
+.summary-total{
+  display:flex;
+  justify-content:space-between;
+  gap: 12px;
+  padding-top: 8px;
+  margin-top: 8px;
+  border-top: 1px solid rgba(16,24,40,.08);
+}
+
+.form-hint{
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* Quick view thumbs (if you added ProductQuickViewModal) */
+.product-quick-modal{
+  max-width: 1050px;
+}
+.product-main-image img{
+  width: 100%;
+  height: 360px;
+  object-fit: cover;
+  border-radius: 16px;
+}
+.thumb-row{
+  display:flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+.thumb{
+  width: 84px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 12px;
+  cursor: pointer;
+  opacity: .75;
+  border: 2px solid transparent;
+}
+.thumb.active{
+  opacity: 1;
+  border-color: #111;
+}
+
+/* -------------------------
+   Footer
+-------------------------- */
+.site-footer{
+  border-top: 1px solid rgba(16,24,40,.08);
+  padding: 26px 0;
+  background: rgba(255,255,255,.75);
+}
+.footer-brand{
+  font-weight: 950;
+}
+
+/* =========================
+   Mobile / Small screen fixes
+   ========================= */
+
+@media (max-width: 576px){
+
+  /* General spacing */
+  .container{
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+
+  /* Hero */
+  .hero-section{ padding: 42px 0; }
+  .hero-copy{ padding: 14px; }
+  .hero-copy h1{ font-size: 34px; }
+  .hero-copy p{ font-size: 14px; }
+
+  /* Search input full width */
+  .search-box{
+    width: 100%;
+  }
+  .search-box input{
+    width: 100% !important;
+    min-width: 0;
+  }
+
+  /* Categories row: horizontal scroll so it doesn't wrap ugly */
+  .category-row{
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .category-pill{
+    white-space: nowrap;
+    flex: 0 0 auto;
+  }
+
+  /* Product card image a bit shorter */
+  .product-photo img{ height: 165px; }
+
+  /* ======= Modals: important mobile fix ======= */
+  .modal-backdrop-custom{
+    align-items: flex-start;           /* start from top, not center */
+    padding: 12px;
+    padding-top: 12px;
+  }
+
+  .request-modal{
+    width: 100%;
+    max-height: calc(100vh - 24px);    /* fit inside screen */
+    overflow-y: auto;                  /* scroll inside modal */
+    border-radius: 18px;
+    padding: 12px;
+  }
+
+  /* Make modal header stick on top while scrolling */
+  .modal-head{
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--surface);
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(16,24,40,.08);
+  }
+
+  /* Close button a bit smaller */
+  .icon-close{
+    width: 38px;
+    height: 38px;
+  }
+
+  /* Selected summary spacing */
+  .selected-summary{ padding: 10px; }
+
+  /* Forms: reduce big inputs spacing */
+  .form-control-lg{ font-size: 16px; }
+}
+
+/* =========================
+   Product Quick View modal responsive
+   ========================= */
+
+@media (max-width: 576px){
+  .product-quick-modal{
+    max-width: 100%;
+  }
+
+  .product-main-image img{
+    height: 220px;     /* was 360px – too tall for mobile */
+    border-radius: 14px;
+  }
+
+  .thumb{
+    width: 64px;
+    height: 48px;
+    border-radius: 10px;
+  }
+
+  /* Reviews list: avoid huge scroll inside scroll */
+  .product-quick-modal .border.rounded.p-2.mb-2{
+    padding: 10px !important;
+  }
+}
+
+.contact-card{
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 18px;
+  box-shadow: var(--shadow-sm);
+}
+.contact-card h2{
+  font-weight: 950;
+}
+.contact-card p{
+  color: var(--ink);
+}
+.contact-grid{
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.contact-card,
+.map-card{
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.map-embed{
+  width: 100%;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(16,24,40,.10);
+}
+
+/* responsive iframe box */
+.map-embed iframe{
+  width: 100%;
+  height: 100%;
+  min-height: 340px;
+  border: 0;
+  display: block;
+}
+
+@media (max-width: 768px){
+  .contact-grid{
+    grid-template-columns: 1fr;
+  }
+  .map-embed iframe{
+    min-height: 260px;
   }
 }
