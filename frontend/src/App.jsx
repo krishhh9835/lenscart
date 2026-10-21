@@ -44,6 +44,7 @@ function productImage(product) {
 }
 
 export default function App() {
+
   const SHOP_NAME = import.meta.env.VITE_SHOP_NAME || "चश्मा वाले";
   const SHOP_ADDRESS = import.meta.env.VITE_SHOP_ADDRESS || "";
   const OWNER_EMAIL = import.meta.env.VITE_OWNER_EMAIL || "";
@@ -75,9 +76,23 @@ export default function App() {
   const [productForm, setProductForm] = useState(blankProduct);
   const [editingId, setEditingId] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [productImages, setProductImages] = useState([]);
+const [uploadFiles, setUploadFiles] = useState([]);
+const [uploadVariant, setUploadVariant] = useState("");
+const [uploadPrimary, setUploadPrimary] = useState(false);
+const [uploading, setUploading] = useState(false);
 
   // NEW: orders state (history)
   const [orders, setOrders] = useState([]);
+
+async function loadProductImages(productId) {
+  try {
+    const { data } = await api.get(`/owner/products/${productId}/images`);
+    setProductImages(data);
+  } catch {
+    setProductImages([]);
+  }
+}
 
   const loadProducts = async () => {
     try {
@@ -147,6 +162,52 @@ function closeQuickView() {
     setCart((current) => ({ ...current, [id]: next }));
   }
 
+  async function uploadProductImages(e) {
+  e.preventDefault();
+  if (!editingId) {
+    setNotice({ type: "danger", text: "Please select/edit a product first, then upload images." });
+    return;
+  }
+  if (!uploadFiles || uploadFiles.length === 0) {
+    setNotice({ type: "danger", text: "Please choose image files." });
+    return;
+  }
+
+  setUploading(true);
+  try {
+    const form = new FormData();
+    for (const file of uploadFiles) form.append("files", file);
+    if (uploadVariant) form.append("variant", uploadVariant);
+    form.append("set_primary", uploadPrimary ? "true" : "false");
+
+    await api.post(`/owner/products/${editingId}/images`, form, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+
+    // refresh images + products list (so primary image_url updates)
+    await loadProductImages(editingId);
+    await Promise.all([loadProducts(), loadOwnerData()]);
+    setNotice({ type: "success", text: "Images uploaded successfully." });
+
+    setUploadFiles([]);
+    setUploadVariant("");
+    setUploadPrimary(false);
+  } catch (err) {
+    setNotice({ type: "danger", text: err.response?.data?.error || "Image upload failed." });
+  } finally {
+    setUploading(false);
+  }
+}
+  async function deleteProductImage(imageId) {
+  if (!window.confirm("Delete this image?")) return;
+  try {
+    await api.delete(`/owner/product-images/${imageId}`);
+    await loadProductImages(editingId);
+    setNotice({ type: "success", text: "Image deleted." });
+  } catch {
+    setNotice({ type: "danger", text: "Could not delete image." });
+  }
+}
   async function submitRequest(event) {
     event.preventDefault();
     setBusy(true);
@@ -282,8 +343,12 @@ function closeQuickView() {
       price: String(product.price),
       stock: String(product.stock),
     });
+
     window.scrollTo({ top: 0, behavior: "smooth" });
+    loadProductImages(product.id);
   }
+  
+
 
   return (
     <div className="app-shell">
@@ -887,6 +952,85 @@ function closeQuickView() {
                           })
                         }
                       />
+                      <div className="mt-3 p-3 rounded" style={{ border: "1px solid rgba(16,24,40,.10)", background: "rgba(16,24,40,.02)" }}>
+  <h6 className="mb-2">Upload product images (Cloudinary)</h6>
+
+  <div className="row g-2">
+    <div className="col-md-6">
+      <label className="form-label">Select images (you can choose 3–4)</label>
+      <input
+        className="form-control"
+        type="file"
+        accept="image/*"
+        multiple
+        onChange={(e) => setUploadFiles(Array.from(e.target.files || []))}
+      />
+    </div>
+
+    <div className="col-md-3">
+      <label className="form-label">Variant/Color (optional)</label>
+      <input
+        className="form-control"
+        placeholder="Black / Blue / etc"
+        value={uploadVariant}
+        onChange={(e) => setUploadVariant(e.target.value)}
+      />
+    </div>
+
+    <div className="col-md-3 d-flex align-items-end">
+      <div className="form-check">
+        <input
+          className="form-check-input"
+          type="checkbox"
+          id="setPrimary"
+          checked={uploadPrimary}
+          onChange={(e) => setUploadPrimary(e.target.checked)}
+        />
+        <label className="form-check-label" htmlFor="setPrimary">
+          Set as main image
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <button
+    className="btn btn-outline-dark rounded-pill mt-3"
+    onClick={uploadProductImages}
+    disabled={uploading || !editingId}
+    type="button"
+  >
+    {uploading ? "Uploading..." : "Upload images"}
+  </button>
+
+  <div className="mt-3">
+    <div className="small text-secondary mb-2">Uploaded images for this product:</div>
+    {productImages.length === 0 ? (
+      <div className="text-secondary small">No extra images yet.</div>
+    ) : (
+      <div className="d-flex flex-wrap gap-2">
+        {productImages.map((img) => (
+          <div key={img.id} style={{ width: 92 }}>
+            <img
+              src={img.url}
+              alt={img.variant || "product"}
+              style={{ width: "92px", height: "70px", objectFit: "cover", borderRadius: 12, border: "1px solid rgba(16,24,40,.10)" }}
+            />
+            <div className="small text-secondary" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              {img.variant || "Image"}
+            </div>
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-danger w-100 mt-1"
+              onClick={() => deleteProductImage(img.id)}
+            >
+              Delete
+            </button>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+</div>
 
                       <label className="form-label">Description</label>
                       <textarea
@@ -915,6 +1059,10 @@ function closeQuickView() {
                           onClick={() => {
                             setEditingId(null);
                             setProductForm(blankProduct);
+                             setProductImages([]);
+  setUploadFiles([]);
+  setUploadVariant("");
+  setUploadPrimary(false);
                           }}
                         >
                           Cancel edit
