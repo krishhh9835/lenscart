@@ -1,4 +1,6 @@
 import os
+import cloudinary
+import cloudinary.uploader
 import re
 from datetime import datetime
 from functools import wraps
@@ -11,6 +13,15 @@ from flask_sqlalchemy import SQLAlchemy
 load_dotenv()
 
 app = Flask(__name__)
+cloudinary.config(
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.getenv("CLOUDINARY_API_KEY"),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET"),
+    secure=True,
+)
+
+# Optional: limit upload size (8MB)
+app.config["MAX_CONTENT_LENGTH"] = 8 * 1024 * 1024
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-only-change-this-secret")
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
     "DATABASE_URL", "sqlite:///chashma_shop.db"
@@ -44,7 +55,6 @@ db = SQLAlchemy(app)
 OWNER_USERNAME = os.getenv("OWNER_USERNAME", "owner")
 OWNER_PASSWORD = os.getenv("OWNER_PASSWORD", "change-this-password")
 
-
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False)
@@ -61,7 +71,12 @@ class Product(db.Model):
                          order_by="ProductImage.sort_order.asc()")
     reviews = db.relationship("Review", backref="product", cascade="all, delete-orphan",
                           order_by="Review.created_at.desc()")
-
+    images = db.relationship(
+    "ProductImage",
+    backref="product",
+    cascade="all, delete-orphan",
+    order_by="ProductImage.sort_order.asc()",
+)
     def to_dict(self):
         return {
             "id": self.id,
@@ -73,6 +88,25 @@ class Product(db.Model):
             "price": self.price,
             "stock": self.stock,
             "active": self.active,
+            "images": [img.to_dict() for img in getattr(self, "images", [])],
+        }
+
+class ProductImage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey("product.id"), nullable=False)
+    url = db.Column(db.String(500), nullable=False)
+    public_id = db.Column(db.String(300), nullable=True, default="")   # cloudinary public id
+    variant = db.Column(db.String(60), nullable=True, default="")      # e.g. "Black", "Blue"
+    sort_order = db.Column(db.Integer, nullable=False, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "product_id": self.product_id,
+            "url": self.url,
+            "variant": self.variant or "",
+            "sort_order": self.sort_order,
         }
 
 
@@ -476,6 +510,82 @@ def add_product():
     db.session.commit()
     return jsonify(product.to_dict()), 201
 
+@app.get("/api/owner/products/<int:product_id>/images")
+@owner_required
+def owner_list_product_images(product_id):
+    product = db.session.get(Product, product_id)
+    if not product:
+        return jsonify({"error": "Product not found."}), 404
+    return jsonify([img.to_dict() for img in product.images])
+
+@app.post("/api/owner/products/<int:product_id>/images")
+@owner_required
+def owner_upload_product_images(product_id):
+    product = db.session.get(Product, product_id)
+    if not product:
+        return jsonify({"error": "Product not found."}), 404
+
+    files = request.files.getlist("files")
+    if not files:
+        return jsonify({"error": "Please select image file(s)."}), 400
+
+    variant = (request.form.get("variant") or "").strip()[:60]
+    set_primary = (request.form.get("set_primary") or "").lower() in {"1", "true", "yes"}
+
+    folder = os.getenv("CLOUDINARY_FOLDER", "chashma-wale/products")
+
+    created = []
+    # sort_order: append at end
+    next_sort = (product.images[-1].sort_order + 1) if product.images else 0
+
+    for f in files:
+        # basic type check
+        if not (f.mimetype or "").startswith("image/"):
+            return jsonify({"error": "Only image uploads are allowed."}), 400
+
+        res = cloudinary.uploader.upload(
+            f,
+            folder=folder,
+            resource_type="image",
+        )
+        url = res.get("secure_url")
+        public_id = res.get("public_id", "")
+
+        row = ProductImage(
+            product_id=product.id,
+            url=url,
+            public_id=public_id,
+            variant=variant,
+            sort_order=next_sort,
+        )
+        next_sort += 1
+        db.session.add(row)
+        created.append(row)
+
+        # If primary image is empty OR user wants set_primary, set product.image_url
+        if (not product.image_url) or set_primary:
+            product.image_url = url
+
+    db.session.commit()
+    return jsonify([r.to_dict() for r in created]), 201
+
+@app.delete("/api/owner/product-images/<int:image_id>")
+@owner_required
+def owner_delete_product_image(image_id):
+    img = db.session.get(ProductImage, image_id)
+    if not img:
+        return jsonify({"error": "Image not found."}), 404
+
+    # try deleting from cloudinary (optional)
+    try:
+        if img.public_id:
+            cloudinary.uploader.destroy(img.public_id, resource_type="image")
+    except Exception:
+        pass
+
+    db.session.delete(img)
+    db.session.commit()
+    return jsonify({"message": "Image deleted."})
 
 @app.patch("/api/owner/products/<int:product_id>")
 @owner_required
