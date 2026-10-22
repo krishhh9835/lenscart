@@ -32,15 +32,19 @@ const money = (value) => `₹${Number(value || 0).toLocaleString("en-IN")}`;
 
 function productImage(product) {
   if (product.image_url) return product.image_url;
+
+  // fallback: first uploaded image (from product.images)
+  const first = product?.images?.[0];
+  if (typeof first === "string" && first) return first;     // safety
+  if (first?.url) return first.url;
+
   const colors = {
     Frames: "e9e5df",
     Sunglasses: "d9e3e8",
     Lenses: "e2e9e2",
     Accessories: "eee2d7",
   };
-  return `https://placehold.co/700x500/${
-    colors[product.category] || "e9e5df"
-  }/172554?text=${encodeURIComponent(product.name)}`;
+  return `https://placehold.co/700x500/${colors[product.category] || "e9e5df"}/172554?text=${encodeURIComponent(product.name)}`;
 }
 
 export default function App() {
