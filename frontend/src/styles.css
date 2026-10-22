@@ -953,3 +953,55 @@ body{
     min-height: 260px;
   }
 }
+
+/* ---- Product card: price + stock spacing fix ---- */
+.product-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* price + stock ko stack karo (upar price, niche stock) */
+.product-bottom > div:first-child {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+}
+
+.product-bottom strong {
+  display: block;
+  font-size: 1.12rem;
+  line-height: 1.25;
+  letter-spacing: 0.2px;
+}
+
+.product-bottom small {
+  display: block;
+  font-size: 0.78rem;
+  color: #667085;
+  margin-top: 1px;
+}
+
+/* stock pill jaisa look (optional) */
+.product-bottom small::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #12b76a;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+
+/* Mobile: Add button poori width na le, sirf wrap ho */
+@media (max-width: 576px) {
+  .product-bottom .add-btn {
+    padding: 8px 18px;
+    font-size: 0.9rem;
+  }
+}
